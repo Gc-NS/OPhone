@@ -1,5 +1,1027 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><style>body{background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100%;margin:0}</style></head>
-<body><h1 style="font-size:24px">Ophone Loaded</h1></body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ophone</title>
+    <style>
+        /* ===== CORE RESET & BASE ===== */
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        :root{
+            --bg:#000;--bg2:#1c1c1e;--bg3:#2c2c2e;--bg4:#3a3a3c;
+            --text:#fff;--text2:#8e8e93;--text3:#636366;
+            --accent:#0a84ff;--green:#30d158;--red:#ff453a;--orange:#ff9f0a;--purple:#bf5af2;--yellow:#ffd60a;--teal:#64d2ff;--pink:#ff375f;
+            --sep:rgba(255,255,255,.08);--card:#1c1c1e;--input:#2c2c2e;
+            --radius:10px;--radius-lg:16px;
+        }
+        html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;color:var(--text);user-select:none;-webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center}
+        
+        /* ===== PHONE CONTAINER ===== */
+        .phone-wrapper{position:relative;width:320px;height:690px;flex-shrink:0}
+        .phone-svg{width:100%;height:100%;display:block}
+        .phone-screen{position:absolute;left:90px;top:90px;width:1110px;height:2616px;overflow:hidden;border-radius:170px;background:transparent;transform:scale(0.26);transform-origin:top left}
+        
+        /* ===== DYNAMIC ISLAND ===== */
+        .dynamic-island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:100px;height:28px;background:#000;border-radius:14px;z-index:100;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;transition:all .3s cubic-bezier(.4,.0,.2,1)}
+        .di-camera{width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#1a2744 40%,#0a1020 100%)}
+        
+        /* ===== STATUS BAR ===== */
+        .status-bar{position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 48px;z-index:90;font-size:14px;font-weight:600;letter-spacing:.2px;padding-top:12px}
+        .status-left{font-weight:600}
+        .status-right{display:flex;align-items:center;gap:6px}
+        .signal-bars{display:flex;align-items:flex-end;gap:1.5px;height:10px;margin-right:2px}
+        .signal-bars .bar{width:3px;background:var(--text);border-radius:1px}
+        .bar-1{height:3px}.bar-2{height:5px}.bar-3{height:7px}.bar-4{height:10px}
+        .signal-bars.no-signal .bar{background:var(--text3);opacity:.3}
+        .battery-icon{width:25px;height:12px;border:1.5px solid var(--text);border-radius:3px;padding:1.5px;position:relative}
+        .battery-icon::after{content:'';position:absolute;right:-4px;top:2.5px;width:2px;height:5px;background:var(--text);border-radius:0 1px 1px 0}
+        .battery-fill{height:100%;background:var(--green);border-radius:1.5px;transition:width .3s;width:100%}
+        .battery-fill.low{background:var(--orange)}
+        .battery-fill.critical{background:var(--red)}
+        
+        /* ===== SCREEN CONTAINER ===== */
+        .screen-container{position:absolute;top:44px;left:0;right:0;bottom:20px;overflow:hidden}
+        .screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg)}
+        .screen.active{display:flex}
+        
+        /* ===== HOME INDICATOR ===== */
+        .home-bar{padding:6px 0;display:flex;justify-content:center;flex-shrink:0;background:transparent}
+        .home-indicator{width:120px;height:5px;background:rgba(255,255,255,.3);border-radius:3px}
+        
+        /* ===== LOCK SCREEN ===== */
+        .screen-lock{background:#000}
+        .lock-wallpaper{position:absolute;inset:0;background:linear-gradient(145deg,#0a0a1a,#1a1030,#0d1f3c);transition:background-image .5s}
+        .lock-content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;padding-top:60px}
+        .lock-time{font-size:64px;font-weight:200;letter-spacing:-2px;text-shadow:0 2px 16px rgba(0,0,0,.5)}
+        .lock-date{font-size:15px;font-weight:400;opacity:.7;margin-top:4px}
+        .lock-bottom{position:relative;z-index:2;padding-bottom:30px;text-align:center;width:100%}
+        .lock-missed{font-size:12px;opacity:.5;margin-bottom:10px}
+        .unlock-hint{font-size:12px;opacity:.4;animation:pulse 2.5s ease infinite}
+        @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.7}}
+        
+        /* ===== HOME SCREEN ===== */
+        .screen-home{background:transparent}
+        .home-wallpaper{position:absolute;inset:0;background:linear-gradient(145deg,#0f0c29,#302b63,#24243e);transition:background-image .5s}
+        .app-grid{position:relative;z-index:2;flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px 10px;padding:12px 12px 8px;align-content:start;overflow-y:auto}
+        .app-grid::-webkit-scrollbar{display:none}
+        .app-icon{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+        .app-icon-img{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;position:relative;transition:transform .1s ease;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+        .app-icon-img:active{transform:scale(.85)}
+        .app-icon-name{font-size:10px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);text-align:center;line-height:1.2;letter-spacing:.1px;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .app-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 1px 4px rgba(255,69,58,.5)}
+        .app-dock{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px;margin:0 8px 8px;background:rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:28px;border:1px solid rgba(255,255,255,.08)}
+        .app-dock .app-icon-img{width:50px;height:50px}
+        
+        /* ===== APP SCREEN ===== */
+        .screen-app{background:var(--bg)}
+        .app-header{height:50px;padding-top:8px;display:flex;align-items:center;padding-left:12px;padding-right:12px;gap:8px;background:rgba(28,28,30,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--sep);flex-shrink:0}
+        .app-back{background:none;border:none;color:var(--accent);cursor:pointer;padding:6px;font-size:16px;display:flex;align-items:center}
+        .app-title{font-size:16px;font-weight:600;flex:1;text-align:center;letter-spacing:.2px}
+        .app-header-right{font-size:14px;color:var(--accent);cursor:pointer;font-weight:500}
+        .app-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:20px}
+        .app-content::-webkit-scrollbar{display:none}
+        
+        /* ===== CALL SCREEN ===== */
+        .screen-call{background:linear-gradient(180deg,#0a1628,#0d2137);z-index:80}
+        .call-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(10,132,255,.1),transparent 70%)}
+        .call-info{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:40px}
+        .call-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--bg3),var(--bg4));display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+        .call-name{font-size:24px;font-weight:600;margin-bottom:4px}
+        .call-status{font-size:13px;opacity:.6;margin-bottom:4px}
+        .call-timer{font-size:16px;font-weight:300;opacity:.8}
+        .call-actions{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:30px 20px}
+        .call-btn{width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s ease;box-shadow:0 2px 12px rgba(0,0,0,.3);margin:0 auto}
+        .call-btn:active{transform:scale(.88)}
+        .call-btn-label{font-size:10px;color:var(--text);margin-top:6px;text-align:center;opacity:.8}
+        .call-btn-circle{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+        .call-mute .call-btn-circle{background:rgba(255,255,255,.12)}
+        .call-speaker .call-btn-circle{background:rgba(255,255,255,.12)}
+        .call-add .call-btn-circle{background:rgba(255,255,255,.12)}
+        .call-facetime .call-btn-circle{background:rgba(48,209,88,.2)}
+        .call-end .call-btn-circle{background:var(--red)}
+        
+        /* ===== TOAST NOTIFICATIONS ===== */
+        .toast-container{position:absolute;top:50px;left:12px;right:12px;z-index:200;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+        .toast{background:rgba(40,40,40,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:12px;padding:10px 14px;color:#fff;font-size:12px;animation:toastIn .25s ease;pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.4);letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+        .toast-success{border-left:3px solid var(--green)}
+        .toast-error{border-left:3px solid var(--red)}
+        .toast-info{border-left:3px solid var(--accent)}
+        @keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        
+        /* ===== LIST COMPONENTS ===== */
+        .list-item{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--sep);cursor-pointer;transition:background .12s;gap:12px}
+        .list-item:active{background:var(--bg3)}
+        .list-item-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+        .list-item-content{flex:1;min-width:0}
+        .list-item-title{font-size:15px;font-weight:400}
+        .list-item-sub{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .list-item-right{color:var(--text2);font-size:13px;display:flex;align-items:center;gap:6px}
+        
+        /* ===== BUTTONS ===== */
+        .btn{display:block;width:100%;padding:12px;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;text-align:center;transition:opacity .12s;letter-spacing:.2px}
+        .btn:active{opacity:.7}
+        .btn-primary{background:var(--accent);color:#fff}
+        .btn-green{background:var(--green);color:#000}
+        .btn-red{background:var(--red);color:#fff}
+        .btn-outline{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+        
+        /* ===== INPUTS ===== */
+        .input-group{padding:0 16px;margin-bottom:12px}
+        .input-label{font-size:11px;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.6px;font-weight:500}
+        .input-field{width:100%;padding:11px 14px;background:var(--input);border:1px solid var(--sep);border-radius:var(--radius);color:var(--text);font-size:15px;outline:none;font-family:inherit}
+        .input-field:focus{border-color:var(--accent)}
+        .input-field::placeholder{color:var(--text3)}
+        textarea.input-field{resize:none;min-height:60px}
+        
+        /* ===== SECTIONS ===== */
+        .section-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;padding:18px 16px 8px;font-weight:500}
+        
+        /* ===== TOGGLE ===== */
+        .toggle{width:42px;height:26px;border-radius:13px;background:var(--bg4);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+        .toggle.active{background:var(--green)}
+        .toggle::after{content:'';position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s ease;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+        .toggle.active::after{transform:translateX(16px)}
+        
+        /* ===== EMPTY STATE ===== */
+        .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;color:var(--text2)}
+        .empty-state-icon{font-size:40px;margin-bottom:12px;opacity:.4}
+        .empty-state-text{font-size:14px;line-height:1.5}
+        
+        /* ===== TAB BAR ===== */
+        .tab-bar{display:flex;border-bottom:1px solid var(--sep);background:rgba(28,28,30,.92);backdrop-filter:blur(20px);flex-shrink:0}
+        .tab-bar-item{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;position:relative;transition:color .2s}
+        .tab-bar-item.active{color:var(--text)}
+        .tab-bar-item.active::after{content:'';position:absolute;bottom:-1px;left:25%;right:25%;height:2px;background:var(--accent);border-radius:1px}
+        
+        /* ===== CHAT BUBBLES ===== */
+        .chat-bubble{max-width:78%;padding:9px 13px;border-radius:16px;font-size:14px;line-height:1.4;margin-bottom:3px;word-wrap:break-word}
+        .chat-bubble.sent{background:var(--accent);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+        .chat-bubble.received{background:var(--bg3);color:#fff;border-bottom-left-radius:4px}
+        
+        /* ===== AVATARS ===== */
+        .avatar{border-radius:50%;object-fit:cover;background:var(--bg3)}
+        .avatar-sm{width:28px;height:28px}
+        .avatar-md{width:36px;height:36px}
+        .avatar-lg{width:52px;height:52px}
+        .avatar-xl{width:80px;height:80px}
+        
+        /* ===== GRID ===== */
+        .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+        .grid-3 img,.grid-3 .grid-item{width:100%;aspect-ratio:1;object-fit:cover;background:var(--bg3);cursor:pointer}
+        
+        /* ===== INSTAGRAM ===== */
+        .ig-post{border-bottom:1px solid var(--sep);padding-bottom:8px;margin-bottom:8px}
+        .ig-post-header{display:flex;align-items:center;padding:8px 12px;gap:8px}
+        .ig-post-username{font-size:12px;font-weight:600;flex:1}
+        .ig-post-more{color:var(--text2);cursor:pointer;font-size:15px}
+        .ig-post-image{width:100%;aspect-ratio:1;object-fit:cover;background:var(--bg3)}
+        .ig-post-text{padding:8px 12px;font-size:12px;line-height:1.5}
+        .ig-post-text .ig-cap-author{font-weight:600;margin-right:4px}
+        .ig-post-actions{display:flex;align-items:center;padding:4px 12px;gap:14px}
+        .ig-post-actions svg{cursor:pointer;transition:transform .12s}
+        .ig-post-actions svg:active{transform:scale(1.2)}
+        .ig-post-likes{padding:0 12px;font-size:12px;font-weight:600;margin-bottom:3px}
+        .ig-post-comments{padding:0 12px;font-size:11px;color:var(--text2);cursor:pointer;margin-bottom:3px}
+        .ig-comment{display:flex;gap:6px;padding:4px 12px;font-size:12px}
+        .ig-comment .ig-comment-user{font-weight:600;margin-right:4px}
+        
+        .ig-profile{padding:12px;text-align:center}
+        .ig-profile-top{display:flex;align-items:center;gap:18px;margin-bottom:12px}
+        .ig-profile-stats{display:flex;gap:16px;justify-content:center;margin-bottom:10px}
+        .ig-profile-stat{text-align:center}
+        .ig-profile-stat-num{font-size:16px;font-weight:700}
+        .ig-profile-stat-label{font-size:11px;color:var(--text2)}
+        .ig-profile-bio{font-size:12px;line-height:1.5;margin-bottom:10px}
+        .ig-profile-actions{display:flex;gap:6px;justify-content:center}
+        
+        /* ===== SHORTS ===== */
+        .shorts-container{position:relative;width:100%;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory}
+        .shorts-container::-webkit-scrollbar{display:none}
+        .shorts-item{width:100%;height:100%;scroll-snap-align:start;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        .shorts-bg{position:absolute;inset:0;background:var(--bg2)}
+        .shorts-bg img{width:100%;height:100%;object-fit:cover}
+        .shorts-overlay{position:absolute;inset:0;background:linear-gradient(transparent 50%,rgba(0,0,0,.6))}
+        .shorts-content{position:absolute;bottom:60px;left:12px;right:52px;z-index:2}
+        .shorts-username{font-size:12px;font-weight:600;margin-bottom:4px}
+        .shorts-caption{font-size:12px;line-height:1.5;margin-bottom:5px}
+        .shorts-text-content{font-size:18px;font-weight:700;line-height:1.4;text-align:center;padding:0 18px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+        .shorts-actions{position:absolute;right:10px;bottom:80px;display:flex;flex-direction:column;align-items:center;gap:16px;z-index:2}
+        .shorts-action{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+        .shorts-action svg{transition:transform .12s}
+        .shorts-action svg:active{transform:scale(1.3)}
+        .shorts-action span{font-size:10px}
+        
+        /* ===== DIAL PAD ===== */
+        .dial-display{text-align:center;padding:20px 16px 14px;font-size:28px;font-weight:300;letter-spacing:1.5px;min-height:60px}
+        .dial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 28px}
+        .dial-btn{width:100%;aspect-ratio:1;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:24px;font-weight:400;cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;flex-direction:column}
+        .dial-btn:active{background:rgba(255,255,255,.25)}
+        .dial-btn-sub{font-size:8px;letter-spacing:1px;opacity:.5;margin-top:-2px}
+        .dial-actions{display:flex;justify-content:center;gap:32px;padding:16px}
+        .dial-call{width:60px;height:60px;border-radius:50%;border:none;background:var(--green);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(48,209,88,.4)}
+        .dial-call:active{opacity:.7}
+        .dial-delete{background:none;border:none;color:var(--text2);cursor:pointer;padding:8px;font-size:20px}
+        
+        /* ===== SETTINGS ===== */
+        .settings-group{background:var(--bg2);border-radius:var(--radius);margin:0 16px 14px;overflow:hidden}
+        .settings-item{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid var(--sep);cursor:pointer;gap:10px}
+        .settings-item:last-child{border-bottom:none}
+        .settings-item:active{background:var(--bg3)}
+        .settings-item-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .settings-item-label{flex:1;font-size:15px}
+        .settings-item-value{color:var(--text2);font-size:14px}
+        
+        /* ===== SIM CARD ===== */
+        .sim-card{background:linear-gradient(135deg,#ff9500,#ff6b00);border-radius:16px;padding:18px;margin:12px;color:#fff;position:relative;overflow:hidden}
+        .sim-card::before{content:'';position:absolute;top:-25px;right:-25px;width:90px;height:90px;background:rgba(255,255,255,.1);border-radius:50%}
+        .sim-card-number{font-size:22px;font-weight:700;margin-bottom:3px;letter-spacing:1px}
+        .sim-card-label{font-size:11px;opacity:.75}
+        .sim-plan{background:var(--bg2);border-radius:var(--radius);padding:12px;margin:0 12px 10px}
+        .sim-plan-name{font-size:15px;font-weight:600;margin-bottom:3px}
+        .sim-plan-detail{font-size:12px;color:var(--text2);margin-bottom:2px}
+        .sim-plan-expiry{font-size:11px;color:var(--orange);margin-top:6px}
+        
+        /* ===== APP STORE ===== */
+        .store-card{background:var(--bg2);border-radius:var(--radius);padding:12px;margin:0 16px 10px;display:flex;gap:10px;align-items:center}
+        .store-card-icon{width:48px;height:48px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+        .store-card-info{flex:1;min-width:0}
+        .store-card-name{font-size:15px;font-weight:600;margin-bottom:2px}
+        .store-card-desc{font-size:12px;color:var(--text2)}
+        .store-card-btn{padding:5px 14px;border-radius:16px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;flex-shrink:0}
+        .store-card-btn.installed{background:var(--bg3);color:var(--text2)}
+        
+        /* ===== ONION ===== */
+        .onion-post{background:var(--bg2);border:1px solid #0a3d0a;border-radius:var(--radius);padding:10px;margin:0 16px 8px}
+        .onion-post-content{font-family:'Courier New',monospace;font-size:12px;color:#0f0;line-height:1.6;margin-bottom:6px}
+        .onion-post-meta{font-size:10px;color:#0a3d0a;display:flex;justify-content:space-between}
+        .onion-warning{background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.2);border-radius:var(--radius);padding:12px;margin:12px;font-size:11px;color:var(--red);text-align:center}
+        
+        /* ===== CAMERA ===== */
+        .camera-screen{background:#000;position:relative}
+        .camera-viewfinder{width:100%;height:calc(100% - 80px);background:#111;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+        .camera-controls{position:absolute;bottom:0;left:0;right:0;padding:14px;display:flex;align-items:center;justify-content:center;gap:32px}
+        .camera-shutter{width:56px;height:56px;border-radius:50%;border:3px solid #fff;background:transparent;cursor:pointer;position:relative}
+        .camera-shutter::after{content:'';position:absolute;inset:4px;border-radius:50%;background:#fff;transition:transform .1s}
+        .camera-shutter:active::after{transform:scale(.85)}
+        .camera-gallery-thumb{width:36px;height:36px;border-radius:7px;border:2px solid #fff;object-fit:cover;background:var(--bg3)}
+        
+        /* ===== GALLERY ===== */
+        .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px}
+        .gallery-item{aspect-ratio:1;background:var(--bg3);cursor:pointer;overflow:hidden}
+        .gallery-item img{width:100%;height:100%;object-fit:cover}
+        .gallery-item:active{opacity:.8}
+        .gallery-fullscreen{position:absolute;inset:0;background:#000;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column}
+        .gallery-fullscreen img{max-width:100%;max-height:80%;object-fit:contain}
+        .gallery-fullscreen-actions{display:flex;gap:14px;padding:14px}
+        
+        /* ===== MAIL ===== */
+        .mail-item{display:flex;gap:10px;padding:10px 16px;border-bottom:1px solid var(--sep);cursor-pointer}
+        .mail-item:active{background:var(--bg3)}
+        .mail-item-unread .mail-item-subject{font-weight:600}
+        .mail-item-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
+        .mail-item-content{flex:1;min-width:0}
+        .mail-item-from{font-size:13px;font-weight:500;margin-bottom:2px}
+        .mail-item-subject{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .mail-item-time{font-size:10px;color:var(--text3);margin-top:3px}
+        
+        /* ===== MODAL ===== */
+        .modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:150;display:flex;align-items:center;justify-content:center;padding:16px}
+        .modal{background:var(--bg2);border-radius:var(--radius-lg);width:100%;max-width:260px;overflow-hidden;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+        .modal-header{padding:16px;text-align:center}
+        .modal-title{font-size:16px;font-weight:600;margin-bottom:3px}
+        .modal-desc{font-size:12px;color:var(--text2)}
+        .modal-body{padding:0 16px 16px}
+        .modal-actions{border-top:1px solid var(--sep);display:flex}
+        .modal-btn{flex:1;padding:12px;text-align:center;font-size:14px;cursor:pointer;border:none;background:none;color:var(--accent)}
+        .modal-btn:first-child{border-right:1px solid var(--sep)}
+        .modal-btn.danger{color:var(--red)}
+        .modal-btn:active{background:var(--bg3)}
+        
+        /* ===== UTILITIES ===== */
+        .flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-10{gap:10px}.p-12{padding:12px}.mt-10{margin-top:10px}.mb-10{margin-bottom:10px}.text-center{text-align:text}.text-sm{font-size:11px}.text-muted{color:var(--text2)}.font-bold{font-weight:600}.w-full{width:100%}
+        
+        /* ===== ANIMATIONS ===== */
+        .fade-in{animation:fadeIn .2s ease}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .slide-up{animation:slideUp .25s ease}
+        @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    </style>
+</head>
+<body>
+    <div class="phone-wrapper">
+        <!-- SVG Phone Frame -->
+        <svg class="phone-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1290 2796">
+            <defs>
+                <mask id="screenMask">
+                    <rect width="1290" height="2796" fill="black"/>
+                    <rect x="80" y="80" width="1130" height="2636" rx="170" ry="170" fill="white"/>
+                </mask>
+            </defs>
+            
+            <!-- Phone frame -->
+            <rect x="20" y="20" width="1250" height="2756" rx="190" ry="190"
+                  fill="#111" stroke="#8b8b8b" stroke-width="18"/>
+            
+            <!-- Screen cutout -->
+            <rect x="80" y="80" width="1130" height="2636" rx="170" ry="170"
+                  fill="transparent" stroke="#2a2a2a" stroke-width="8"/>
+            
+            <!-- Dynamic Island -->
+            <rect x="525" y="120" width="240" height="60" rx="30" fill="#000"/>
+            <circle cx="715" cy="150" r="11" fill="#1f3b7a"/>
+            
+            <!-- Bottom indicator -->
+            <rect x="575" y="2676" width="140" height="10" rx="5" fill="#222"/>
+            
+            <!-- Left buttons -->
+            <rect x="0" y="260" width="18" height="110" rx="8" fill="#a0a0a0"/>
+            <rect x="0" y="470" width="18" height="180" rx="8" fill="#a0a0a0"/>
+            <rect x="0" y="690" width="18" height="180" rx="8" fill="#a0a0a0"/>
+            
+            <!-- Right button -->
+            <rect x="1272" y="560" width="18" height="260" rx="8" fill="#a0a0a0"/>
+            
+            <!-- HTML content container -->
+            <foreignObject x="90" y="90" width="1110" height="2616" mask="url(#screenMask)">
+                <div xmlns="http://www.w3.org/1999/xhtml"
+                     style="width:100%;height:100%;overflow:hidden;border-radius:170px;background:transparent;position:relative;"
+                     id="phone-screen">
+                    
+                    <!-- Status Bar -->
+                    <div class="status-bar">
+                        <div class="status-left" id="statusTime">12:00</div>
+                        <div class="status-right">
+                            <div class="signal-bars" id="signalBars">
+                                <div class="bar bar-1"></div>
+                                <div class="bar bar-2"></div>
+                                <div class="bar bar-3"></div>
+                                <div class="bar bar-4"></div>
+                            </div>
+                            <div class="battery-icon">
+                                <div class="battery-fill" id="batteryFill"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Toast Container -->
+                    <div class="toast-container" id="toastContainer"></div>
+                    
+                    <!-- Screen Container -->
+                    <div class="screen-container">
+                        
+                        <!-- Lock Screen -->
+                        <div class="screen screen-lock active" id="screenLock">
+                            <div class="lock-wallpaper" id="lockWallpaper"></div>
+                            <div class="lock-content">
+                                <div class="lock-time" id="lockTime">12:00</div>
+                                <div class="lock-date" id="lockDate">Monday, January 1</div>
+                            </div>
+                            <div class="lock-bottom">
+                                <div class="lock-missed" id="lockMissed"></div>
+                                <div class="unlock-hint">Swipe up to unlock</div>
+                            </div>
+                            <div class="home-bar" onclick="App.unlock()">
+                                <div class="home-indicator"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Home Screen -->
+                        <div class="screen screen-home" id="screenHome">
+                            <div class="home-wallpaper" id="homeWallpaper"></div>
+                            <div class="app-grid" id="appGrid"></div>
+                            <div class="app-dock" id="appDock"></div>
+                            <div class="home-bar">
+                                <div class="home-indicator"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- App Screen -->
+                        <div class="screen screen-app" id="screenApp">
+                            <div class="app-header">
+                                <button class="app-back" onclick="App.goBack()">‹ Back</button>
+                                <div class="app-title" id="appTitle">App</div>
+                                <div class="app-header-right" id="appHeaderRight"></div>
+                            </div>
+                            <div class="app-content" id="appContent"></div>
+                            <div class="home-bar">
+                                <div class="home-indicator"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Call Screen -->
+                        <div class="screen screen-call" id="screenCall">
+                            <div class="call-bg"></div>
+                            <div class="call-info">
+                                <div class="call-avatar" id="callAvatar">👤</div>
+                                <div class="call-name" id="callName">Unknown</div>
+                                <div class="call-status" id="callStatus">Calling...</div>
+                                <div class="call-timer" id="callTimer"></div>
+                            </div>
+                            <div class="call-actions" id="callActions">
+                                <div class="call-btn call-mute" onclick="Phone.toggleMute()">
+                                    <div class="call-btn-circle">🔇</div>
+                                    <div class="call-btn-label">Mute</div>
+                                </div>
+                                <div class="call-btn call-add" onclick="Api.call('Ophone.addCall')">
+                                    <div class="call-btn-circle">+</div>
+                                    <div class="call-btn-label">Add Call</div>
+                                </div>
+                                <div class="call-btn call-speaker" onclick="Phone.toggleSpeaker()">
+                                    <div class="call-btn-circle">🔊</div>
+                                    <div class="call-btn-label">Speaker</div>
+                                </div>
+                                <div class="call-btn call-facetime" onclick="Api.call('Ophone.faceTime')">
+                                    <div class="call-btn-circle">📹</div>
+                                    <div class="call-btn-label">FaceTime</div>
+                                </div>
+                                <div class="call-btn" style="grid-column:2;"></div>
+                                <div class="call-btn call-end" onclick="Api.endCall()">
+                                    <div class="call-btn-circle">📞</div>
+                                </div>
+                            </div>
+                            <div class="home-bar">
+                                <div class="home-indicator"></div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </foreignObject>
+        </svg>
+    </div>
+
+    <script>
+        // ===== UTILS =====
+        const Utils = {
+            escapeHtml(t) {
+                if (!t) return '';
+                const d = document.createElement('div');
+                d.textContent = t;
+                return d.innerHTML;
+            },
+            timeAgo(date) {
+                const s = Math.floor((Date.now() - new Date(date)) / 1000);
+                if (s < 60) return 'just now';
+                if (s < 3600) return Math.floor(s / 60) + 'm';
+                if (s < 86400) return Math.floor(s / 3600) + 'h';
+                if (s < 604800) return Math.floor(s / 86400) + 'd';
+                return new Date(date).toLocaleDateString();
+            },
+            formatTime(d) {
+                return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            },
+            formatDate(d) {
+                const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate();
+            },
+            formatCallDuration(ms) {
+                const s = Math.floor(ms / 1000);
+                const m = Math.floor(s / 60);
+                const h = Math.floor(m / 60);
+                if (h > 0) return String(h).padStart(2,'0') + ':' + String(m % 60).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+                return String(m).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+            },
+            randomGradient() {
+                const pairs = [
+                    ['#ff6b6b','#ee5a24'],['#feca57','#ff9f43'],['#48dbfb','#0abde3'],
+                    ['#ff9ff3','#f368e0'],['#54a0ff','#2e86de'],['#5f27cd','#341f97']
+                ];
+                const p = pairs[Math.floor(Math.random() * pairs.length)];
+                return 'linear-gradient(135deg,' + p[0] + ',' + p[1] + ')';
+            }
+        };
+
+        // ===== API =====
+        const Api = {
+            _callbacks: {},
+            call(fnName) {
+                const args = [];
+                for (let i = 1; i < arguments.length; i++) args.push(arguments[i]);
+                try {
+                    if (typeof mta !== 'undefined' && mta.triggerEvent) {
+                        mta.triggerEvent('Ophone.jsCall', fnName, JSON.stringify(args));
+                    }
+                } catch(e) { console.error('Api.call error:', fnName, e); }
+            },
+            on(eventName, handler) {
+                if (!this._callbacks[eventName]) this._callbacks[eventName] = [];
+                this._callbacks[eventName].push(handler);
+            },
+            trigger(eventName, data) {
+                const handlers = this._callbacks[eventName];
+                if (handlers) {
+                    const parsed = typeof data === 'string' ? (() => { try { return JSON.parse(data); } catch(e) { return data; } })() : data;
+                    handlers.forEach(h => { try { h(parsed); } catch(e) { console.error('Api handler error:', eventName, e); } });
+                }
+            },
+            dialNumber(num) { this.call('Ophone.dialNumber', num); },
+            acceptCall() { this.call('Ophone.acceptCall'); },
+            endCall() { this.call('Ophone.endCall'); },
+            addContact(name, number) { this.call('Ophone.addContact', name, number); },
+            deleteContact(id) { this.call('Ophone.deleteContact', id); },
+            sendMessage(to, content) { this.call('Ophone.sendMessage', to, content); },
+            sendMail(to, subject, content) { this.call('Ophone.sendMail', to, subject, content); },
+            deleteMail(id) { this.call('Ophone.deleteMail', id); },
+            activateSim() { this.call('Ophone.activateSim'); },
+            rechargePlan(planId) { this.call('Ophone.rechargePlan', planId); },
+            takeScreenshot() { this.call('Ophone.takeScreenshot'); },
+            deleteScreenshot(id) { this.call('Ophone.deleteScreenshot', id); },
+            setWallpaper(type, path) { this.call('Ophone.setWallpaper', type, path); },
+            setWallpaperUrl(type, url) { this.call('Ophone.setWallpaperUrl', type, url); },
+            installApp(appId) { this.call('Ophone.installApp', appId); },
+            factoryReset() { this.call('Ophone.factoryReset'); },
+            buyPhone() { this.call('Ophone.shopBuyPhone'); },
+            buySim() { this.call('Ophone.shopBuySim'); },
+        };
+
+        // ===== NOTIFICATION =====
+        const Notification = {
+            show(msg, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                if (!container) return;
+                const toast = document.createElement('div');
+                toast.className = 'toast toast-' + type + ' slide-up';
+                toast.textContent = msg;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-10px)';
+                    setTimeout(() => toast.remove(), 250);
+                }, 2500);
+            }
+        };
+
+        // ===== STATUS BAR =====
+        const StatusBar = {
+            init() {
+                this.updateTime();
+                setInterval(() => this.updateTime(), 1000);
+            },
+            updateTime() {
+                const el = document.getElementById('statusTime');
+                const lockTime = document.getElementById('lockTime');
+                const timeStr = Utils.formatTime(new Date());
+                if (el) el.textContent = timeStr;
+                if (lockTime) lockTime.textContent = timeStr;
+            },
+            updateBattery(level) {
+                const fill = document.getElementById('batteryFill');
+                if (fill) {
+                    fill.style.width = Math.max(0, Math.min(100, level)) + '%';
+                    fill.className = 'battery-fill' + (level <= 5 ? ' critical' : level <= 20 ? ' low' : '');
+                }
+            },
+            updateSignal(level) {
+                const bars = document.getElementById('signalBars');
+                if (!bars) return;
+                const barsEls = bars.querySelectorAll('.bar');
+                const active = level <= 0 ? 0 : level <= 25 ? 1 : level <= 50 ? 2 : level <= 75 ? 3 : 4;
+                barsEls.forEach((b, i) => {
+                    b.style.opacity = i < active ? '1' : '0.2';
+                });
+                bars.className = 'signal-bars' + (active === 0 ? ' no-signal' : '');
+            }
+        };
+
+        // ===== LOCK SCREEN =====
+        const LockScreen = {
+            init() {
+                this.updateDate();
+                setInterval(() => this.updateDate(), 60000);
+            },
+            updateDate() {
+                const el = document.getElementById('lockDate');
+                if (el) el.textContent = Utils.formatDate(new Date());
+            },
+            refresh() {
+                const wp = document.getElementById('lockWallpaper');
+                if (wp && App.data && App.data.wallpaper_lock && App.data.wallpaper_lock.startsWith('http')) {
+                    wp.style.backgroundImage = 'url(' + App.data.wallpaper_lock + ')';
+                }
+            }
+        };
+
+        // ===== HOME SCREEN =====
+        const HomeScreen = {
+            apps: [
+                { id: 'phone', name: 'Phone', icon: '📱', color: 'linear-gradient(135deg,#30d158,#34c759)', dock: true },
+                { id: 'messages', name: 'Messages', icon: '💬', color: 'linear-gradient(135deg,#30d158,#28a745)', dock: true },
+                { id: 'mail', name: 'Mail', icon: '✉️', color: 'linear-gradient(135deg,#0a84ff,#007aff)', dock: true, app: true },
+                { id: 'settings', name: 'Settings', icon: '⚙️', color: 'linear-gradient(135deg,#8e8e93,#636366)', dock: true },
+                { id: 'contacts', name: 'Contacts', icon: '👥', color: 'linear-gradient(135deg,#5856d6,#4a4adb)' },
+                { id: 'camera', name: 'Camera', icon: '📷', color: 'linear-gradient(135deg,#1c1c1e,#3a3a3c)' },
+                { id: 'gallery', name: 'Gallery', icon: '🖼️', color: 'linear-gradient(135deg,#ff9f0a,#ff6b00)' },
+                { id: 'sim', name: 'SIM Card', icon: '💳', color: 'linear-gradient(135deg,#ff9500,#ff6b00)' },
+                { id: 'instagram', name: 'Instagram', icon: '📸', color: 'linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4)', app: true },
+                { id: 'shorts', name: 'Shorts', icon: '🎬', color: 'linear-gradient(135deg,#ff0050,#ff0000)', app: true },
+                { id: 'onion', name: 'Onion', icon: '🧅', color: 'linear-gradient(135deg,#1a1a1a,#0a3d0a)', app: true },
+                { id: 'appstore', name: 'App Store', icon: '🏪', color: 'linear-gradient(135deg,#0a84ff,#5856d6)' },
+            ],
+            init() {},
+            refresh() {
+                const grid = document.getElementById('appGrid');
+                const dock = document.getElementById('appDock');
+                if (!grid || !dock) return;
+                const wp = document.getElementById('homeWallpaper');
+                if (wp && App.data && App.data.wallpaper_home && App.data.wallpaper_home.startsWith('http')) {
+                    wp.style.backgroundImage = 'url(' + App.data.wallpaper_home + ')';
+                }
+                grid.innerHTML = '';
+                dock.innerHTML = '';
+                this.apps.forEach(app => {
+                    const isCore = !app.app;
+                    const installed = isCore || App.isInstalled(app.id);
+                    if (!installed && app.app) return;
+                    const el = document.createElement('div');
+                    el.className = 'app-icon fade-in';
+                    el.onclick = () => App.openApp(app.id);
+                    let badge = '';
+                    if (app.id === 'messages' && App.data && App.data.unread_messages > 0) {
+                        badge = '<div class="app-badge">' + App.data.unread_messages + '</div>';
+                    } else if (app.id === 'mail' && App.data && App.data.unread_mail > 0) {
+                        badge = '<div class="app-badge">' + App.data.unread_mail + '</div>';
+                    }
+                    el.innerHTML = '<div class="app-icon-img" style="background:' + app.color + '">' + app.icon + badge + '</div><div class="app-icon-name">' + app.name + '</div>';
+                    if (app.dock) {
+                        dock.appendChild(el);
+                    } else {
+                        grid.appendChild(el);
+                    }
+                });
+            }
+        };
+
+        // ===== PHONE APP =====
+        const Phone = {
+            currentNumber: '',
+            muted: false,
+            speaker: false,
+            init() {},
+            render(content) {
+                const container = document.getElementById('appContent');
+                if (!container) return;
+                if (content === 'dial') {
+                    container.innerHTML = '<div class="dial-display" id="dialDisplay"></div><div class="dial-grid">' + 
+                        ['1','2 ABC','3 DEF','4','5 GHI','6 JKL','7 PQRS','8 TUV','9 WXYZ','*','0 +','#'].map((k,i) => 
+                        '<button class="dial-btn" onclick="Phone.dial(\'' + k.charAt(0) + '\')">' + k.charAt(0) + '<span class="dial-btn-sub">' + (k.substring(2) || '') + '</span></button>'
+                    ).join('') + '</div><div class="dial-actions"><button class="dial-call" onclick="Phone.makeCall()">📞</button><button class="dial-delete" onclick="Phone.deleteDigit()">⌫</button></div>';
+                } else if (content === 'contacts') {
+                    container.innerHTML = '<div id="contactsList"></div>';
+                    this.loadContacts();
+                } else if (content === 'recents') {
+                    container.innerHTML = '<div id="recentsList"></div>';
+                    this.loadRecents();
+                }
+            },
+            dial(digit) {
+                if (this.currentNumber.length >= 15) return;
+                this.currentNumber += digit;
+                const display = document.getElementById('dialDisplay');
+                if (display) display.textContent = this.currentNumber;
+            },
+            deleteDigit() {
+                this.currentNumber = this.currentNumber.slice(0, -1);
+                const display = document.getElementById('dialDisplay');
+                if (display) display.textContent = this.currentNumber;
+            },
+            makeCall() {
+                if (!this.currentNumber) return;
+                Api.dialNumber(this.currentNumber);
+                this.currentNumber = '';
+            },
+            toggleMute() {
+                this.muted = !this.muted;
+                Notification.show(this.muted ? 'Muted' : 'Unmuted', 'info');
+            },
+            toggleSpeaker() {
+                this.speaker = !this.speaker;
+                Notification.show(this.speaker ? 'Speaker On' : 'Speaker Off', 'info');
+            },
+            loadContacts() {
+                const list = document.getElementById('contactsList');
+                if (!list) return;
+                if (App.data && App.data.contacts && App.data.contacts.length > 0) {
+                    list.innerHTML = App.data.contacts.map(c => 
+                        '<div class="list-item" onclick="Phone.dial(\'' + Utils.escapeHtml(c.number) + '\');App.renderApp(\'phone\',\'dial\')">' +
+                        '<div class="list-item-icon" style="background:' + Utils.randomGradient() + '">' + c.name.charAt(0).toUpperCase() + '</div>' +
+                        '<div class="list-item-content"><div class="list-item-title">' + Utils.escapeHtml(c.name) + '</div><div class="list-item-sub">' + Utils.escapeHtml(c.number) + '</div></div>' +
+                        '<div class="list-item-right">›</div></div>'
+                    ).join('');
+                } else {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">No contacts yet</div></div>';
+                }
+            },
+            loadRecents() {
+                const list = document.getElementById('recentsList');
+                if (!list) return;
+                if (App.data && App.data.call_log && App.data.call_log.length > 0) {
+                    list.innerHTML = App.data.call_log.slice(0, 20).map(c => 
+                        '<div class="list-item">' +
+                        '<div class="list-item-content"><div class="list-item-title">' + Utils.escapeHtml(c.number) + '</div><div class="list-item-sub">' + Utils.timeAgo(c.timestamp) + ' • ' + (c.type || 'outgoing') + '</div></div>' +
+                        '<div class="list-item-right" style="color:var(--accent)" onclick="Phone.dial(\'' + Utils.escapeHtml(c.number) + '\');App.renderApp(\'phone\',\'dial\')">📞</div></div>'
+                    ).join('');
+                } else {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📞</div><div class="empty-state-text">No recent calls</div></div>';
+                }
+            }
+        };
+
+        // ===== MESSAGES APP =====
+        const Messages = {
+            currentChat: null,
+            init() {},
+            render(content) {
+                const container = document.getElementById('appContent');
+                if (!container) return;
+                if (content === 'list') {
+                    container.innerHTML = '<div id="conversationsList"></div>';
+                    this.loadConversations();
+                } else if (content === 'chat') {
+                    container.innerHTML = '<div id="chatView" style="padding:12px"><div id="chatMessages"></div><div style="display:flex;gap:8px;padding:12px;position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--sep)"><input type="text" class="input-field" id="messageInput" placeholder="iMessage" style="flex:1"><button class="btn btn-primary" style="width:auto;padding:8px 16px" onclick="Messages.sendMessage()">Send</button></div></div>';
+                    this.loadChat();
+                }
+            },
+            loadConversations() {
+                const list = document.getElementById('conversationsList');
+                if (!list) return;
+                if (App.data && App.data.conversations && App.data.conversations.length > 0) {
+                    list.innerHTML = App.data.conversations.map(c => 
+                        '<div class="list-item" onclick="Messages.openChat(\'' + Utils.escapeHtml(c.contact) + '\')">' +
+                        '<div class="avatar avatar-md" style="background:' + Utils.randomGradient() + ';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">' + c.contact.charAt(0).toUpperCase() + '</div>' +
+                        '<div class="list-item-content"><div class="list-item-title">' + Utils.escapeHtml(c.contact) + '</div><div class="list-item-sub">' + Utils.escapeHtml(c.last_message) + '</div></div>' +
+                        '<div class="list-item-right">' + Utils.timeAgo(c.timestamp) + '</div></div>'
+                    ).join('');
+                } else {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💬</div><div class="empty-state-text">No messages yet</div></div>';
+                }
+            },
+            openChat(contact) {
+                this.currentChat = contact;
+                this.render('chat');
+                document.getElementById('appTitle').textContent = contact;
+            },
+            loadChat() {
+                const msgsEl = document.getElementById('chatMessages');
+                if (!msgsEl || !this.currentChat) return;
+                const conv = App.data.conversations.find(c => c.contact === this.currentChat);
+                if (conv && conv.messages && conv.messages.length > 0) {
+                    msgsEl.innerHTML = conv.messages.map(m => 
+                        '<div class="chat-bubble ' + (m.from === 'me' ? 'sent' : 'received') + '">' + Utils.escapeHtml(m.text) + '</div>'
+                    ).join('');
+                } else {
+                    msgsEl.innerHTML = '<div class="empty-state"><div class="empty-state-text">Start a conversation</div></div>';
+                }
+            },
+            sendMessage() {
+                const input = document.getElementById('messageInput');
+                if (!input || !input.value.trim() || !this.currentChat) return;
+                Api.sendMessage(this.currentChat, input.value.trim());
+                input.value = '';
+                this.loadChat();
+            }
+        };
+
+        // ===== SETTINGS APP =====
+        const Settings = {
+            init() {},
+            render() {
+                const container = document.getElementById('appContent');
+                if (!container) return;
+                container.innerHTML = '<div class="section-title">General</div>' +
+                    '<div class="settings-group">' +
+                    '<div class="settings-item"><div class="settings-item-icon" style="background:#007aff">📶</div><div class="settings-item-label">Cellular</div><div class="settings-item-value">›</div></div>' +
+                    '<div class="settings-item"><div class="settings-item-icon" style="background:#5856d6">📱</div><div class="settings-item-label">Display</div><div class="settings-item-value">›</div></div>' +
+                    '<div class="settings-item"><div class="settings-item-icon" style="background:#ff9500">🔔</div><div class="settings-item-label">Notifications</div><div class="settings-item-value">›</div></div>' +
+                    '</div>' +
+                    '<div class="section-title">Apps</div>' +
+                    '<div class="settings-group">' +
+                    '<div class="settings-item" onclick="Settings.toggleOption(\'receiveCalls\', this)"><div class="settings-item-icon" style="background:#30d158">📞</div><div class="settings-item-label">Receive Calls</div><div class="toggle ' + (App.data && App.data.receive_calls !== false ? 'active' : '') + '" id="toggleReceiveCalls"></div></div>' +
+                    '<div class="settings-item" onclick="Settings.toggleOption(\'notifyMessages\', this)"><div class="settings-item-icon" style="background:#0a84ff">💬</div><div class="settings-item-label">Message Notifications</div><div class="toggle ' + (App.data && App.data.notify_messages !== false ? 'active' : '') + '" id="toggleNotifyMessages"></div></div>' +
+                    '</div>' +
+                    '<div class="section-title">System</div>' +
+                    '<div class="settings-group">' +
+                    '<div class="settings-item" onclick="Api.takeScreenshot()"><div class="settings-item-icon" style="background:#5856d6">📸</div><div class="settings-item-label">Take Screenshot</div></div>' +
+                    '<div class="settings-item" onclick="Settings.factoryReset()"><div class="settings-item-icon" style="background:#ff453a">⚠️</div><div class="settings-item-label" style="color:var(--red)">Factory Reset</div></div>' +
+                    '</div>';
+            },
+            toggleOption(key, el) {
+                const toggle = el.querySelector('.toggle');
+                if (!toggle) return;
+                const isActive = toggle.classList.contains('active');
+                toggle.classList.toggle('active');
+                if (key === 'receiveCalls') Api.toggleReceiveCalls(!isActive);
+                if (key === 'notifyMessages') Api.toggleNotifyMessages(!isActive);
+            },
+            factoryReset() {
+                Modal.show('Factory Reset', 'This will erase all data and restore the phone to its original state.', [
+                    { text: 'Cancel' },
+                    { text: 'Reset', danger: true, callback: () => Api.factoryReset() }
+                ]);
+            }
+        };
+
+        // ===== MODAL =====
+        const Modal = {
+            show(title, desc, buttons) {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay fade-in';
+                overlay.innerHTML = '<div class="modal"><div class="modal-header"><div class="modal-title">' + title + '</div><div class="modal-desc">' + desc + '</div></div><div class="modal-actions">' + 
+                    buttons.map((b, i) => '<button class="modal-btn' + (b.danger ? ' danger' : '') + '"' + (i === 0 ? ' onclick="Modal.close(this)"' : '') + (b.callback ? ' onclick="Modal.close(this,' + JSON.stringify(b.callback.toString()) + ')"' : '') + '>' + b.text + '</button>').join('') +
+                    '</div></div></div>';
+                document.querySelector('.screen-container').appendChild(overlay);
+                overlay.onclick = (e) => { if (e.target === overlay) Modal.close(overlay); };
+            },
+            close(el) {
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 200);
+            }
+        };
+
+        // ===== MAIN APP =====
+        const App = {
+            currentScreen: 'lock',
+            currentApp: null,
+            screenHistory: [],
+            data: null,
+            battery: 100,
+            signal: 100,
+
+            screens: {
+                'phone': Phone,
+                'messages': Messages,
+                'settings': Settings
+            },
+
+            init(data) {
+                this.data = data || {};
+                this.showScreen('lock');
+                StatusBar.init();
+                LockScreen.init();
+                HomeScreen.init();
+                
+                // Simulate battery/signal updates
+                setInterval(() => {
+                    if (Math.random() > 0.7) {
+                        this.battery = Math.max(0, this.battery - 1);
+                        StatusBar.updateBattery(this.battery);
+                    }
+                }, 60000);
+            },
+
+            unlock() {
+                this.showScreen('home');
+            },
+
+            showScreen(name, opts) {
+                if (this.currentApp && this.screens[this.currentApp] && this.screens[this.currentApp].onLeave) {
+                    this.screens[this.currentApp].onLeave();
+                }
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                if (name === 'lock') {
+                    document.getElementById('screenLock').classList.add('active');
+                    this.currentScreen = 'lock';
+                    this.currentApp = null;
+                    LockScreen.refresh();
+                } else if (name === 'home') {
+                    document.getElementById('screenHome').classList.add('active');
+                    this.currentScreen = 'home';
+                    this.currentApp = null;
+                    HomeScreen.refresh();
+                } else if (name === 'call') {
+                    document.getElementById('screenCall').classList.add('active');
+                    this.currentScreen = 'call';
+                } else {
+                    const screen = document.getElementById('screenApp');
+                    screen.classList.add('active');
+                    this.currentScreen = 'app';
+                    this.currentApp = name;
+                    if (this.screens[name] && this.screens[name].onEnter) {
+                        this.screens[name].onEnter(opts);
+                    }
+                }
+            },
+
+            goBack() {
+                if (this.currentScreen === 'call') return;
+                if (this.currentApp && this.screens[this.currentApp] && this.screens[this.currentApp].onBack) {
+                    this.screens[this.currentApp].onBack();
+                    return;
+                }
+                if (this.screenHistory.length > 0) {
+                    const prev = this.screenHistory.pop();
+                    this.showScreen(prev.name, prev.opts);
+                } else {
+                    this.showScreen('home');
+                }
+            },
+
+            pushScreen(name, opts) {
+                this.screenHistory.push({ name: this.currentApp || this.currentScreen, opts: {} });
+                this.showScreen(name, opts);
+            },
+
+            openApp(name, opts) {
+                const coreApps = ['phone','contacts','messages','settings','sim','camera','gallery'];
+                if (!coreApps.includes(name) && !this.isInstalled(name)) {
+                    Notification.show('Install this app from the App Store', 'info');
+                    return;
+                }
+                this.screenHistory = [];
+                this.pushScreen(name, opts);
+                this.renderApp(name, opts);
+            },
+
+            renderApp(name, content) {
+                document.getElementById('appTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+                if (this.screens[name] && this.screens[name].render) {
+                    this.screens[name].render(content);
+                } else if (name === 'contacts') {
+                    Phone.render('contacts');
+                    document.getElementById('appTitle').textContent = 'Contacts';
+                } else if (name === 'camera') {
+                    document.getElementById('appContent').innerHTML = '<div class="camera-screen"><div class="camera-viewfinder">📷 Camera View</div><div class="camera-controls"><div class="camera-gallery-thumb"></div><button class="camera-shutter" onclick="Notification.show(\'Photo taken!\',\'success\')"></button><div class="camera-gallery-thumb"></div></div></div>';
+                } else if (name === 'gallery') {
+                    document.getElementById('appContent').innerHTML = '<div class="gallery-grid">' + Array(12).fill(0).map((_,i) => '<div class="gallery-item" style="background:' + Utils.randomGradient() + '" onclick="Notification.show(\'Image ' + (i+1) + '\',\'info\')"></div>').join('') + '</div>';
+                } else if (name === 'sim') {
+                    document.getElementById('appContent').innerHTML = '<div class="sim-card"><div class="sim-card-number">+1 (555) 123-4567</div><div class="sim-card-label">Primary Number</div></div><div class="sim-plan"><div class="sim-plan-name">Unlimited Plan</div><div class="sim-plan-detail">Unlimited calls & texts</div><div class="sim-plan-expiry">Renews in 15 days</div></div>';
+                } else if (name === 'instagram') {
+                    document.getElementById('appContent').innerHTML = '<div class="ig-profile"><div class="ig-profile-top"><div class="avatar avatar-lg" style="background:' + Utils.randomGradient() + '"></div><div><div style="font-size:18px;font-weight:700">username</div><div style="font-size:12px;color:var(--text2)">Display Name</div></div></div><div class="ig-profile-stats"><div class="ig-profile-stat"><div class="ig-profile-stat-num">0</div><div class="ig-profile-stat-label">posts</div></div><div class="ig-profile-stat"><div class="ig-profile-stat-num">0</div><div class="ig-profile-stat-label">followers</div></div><div class="ig-profile-stat"><div class="ig-profile-stat-num">0</div><div class="ig-profile-stat-label">following</div></div></div><div class="ig-profile-bio">Bio goes here...</div><div class="ig-profile-actions"><button class="btn btn-outline" style="width:auto;padding:6px 16px">Edit Profile</button></div></div><div class="grid-3" style="margin-top:12px"></div>';
+                } else if (name === 'shorts') {
+                    document.getElementById('appContent').innerHTML = '<div class="shorts-container"><div class="shorts-item"><div class="shorts-bg" style="background:' + Utils.randomGradient() + '"></div><div class="shorts-overlay"></div><div class="shorts-text-content">Shorts Content</div><div class="shorts-actions"><div class="shorts-action"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span>0</span></div><div class="shorts-action"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>0</span></div></div></div></div>';
+                } else if (name === 'onion') {
+                    document.getElementById('appContent').innerHTML = '<div class="onion-warning">⚠️ Encrypted Network</div><div class="onion-post"><div class="onion-post-content">Encrypted message content...</div><div class="onion-post-meta"><span>anonymous</span><span>2m ago</span></div></div>';
+                } else if (name === 'appstore') {
+                    document.getElementById('appContent').innerHTML = '<div class="section-title">Available Apps</div><div class="store-card"><div class="store-card-icon" style="background:linear-gradient(135deg,#f58529,#dd2a7b)">📸</div><div class="store-card-info"><div class="store-card-name">Instagram</div><div class="store-card-desc">Social media platform</div></div><button class="store-card-btn" onclick="Api.installApp(\'instagram\');this.textContent=\'Installed\';this.classList.add(\'installed\')">Get</button></div><div class="store-card"><div class="store-card-icon" style="background:linear-gradient(135deg,#ff0050,#ff0000)">🎬</div><div class="store-card-info"><div class="store-card-name">Shorts</div><div class="store-card-desc">Short video platform</div></div><button class="store-card-btn" onclick="Api.installApp(\'shorts\');this.textContent=\'Installed\';this.classList.add(\'installed\')">Get</button></div><div class="store-card"><div class="store-card-icon" style="background:linear-gradient(135deg,#1a1a1a,#0a3d0a)">🧅</div><div class="store-card-info"><div class="store-card-name">Onion</div><div class="store-card-desc">Encrypted messaging</div></div><button class="store-card-btn" onclick="Api.installApp(\'onion\');this.textContent=\'Installed\';this.classList.add(\'installed\')">Get</button></div>';
+                } else if (name === 'mail') {
+                    document.getElementById('appContent').innerHTML = '<div id="mailList"></div>';
+                    if (App.data && App.data.mail && App.data.mail.length > 0) {
+                        document.getElementById('mailList').innerHTML = App.data.mail.map(m => 
+                            '<div class="mail-item' + (m.unread ? ' mail-item-unread' : '') + '"><div class="mail-item-content"><div class="mail-item-from">' + Utils.escapeHtml(m.from) + '</div><div class="mail-item-subject">' + Utils.escapeHtml(m.subject) + '</div><div class="mail-item-time">' + Utils.timeAgo(m.timestamp) + '</div></div></div>'
+                        ).join('');
+                    } else {
+                        document.getElementById('mailList').innerHTML = '<div class="empty-state"><div class="empty-state-icon">✉️</div><div class="empty-state-text">No emails</div></div>';
+                    }
+                }
+            },
+
+            isInstalled(appId) {
+                return this.data && this.data.installed_apps && this.data.installed_apps.includes(appId);
+            },
+
+            updateBattery(level) {
+                this.battery = level;
+                StatusBar.updateBattery(level);
+            },
+
+            updateSignal(level) {
+                this.signal = level;
+                StatusBar.updateSignal(level);
+            }
+        };
+
+        // ===== INITIALIZATION =====
+        window.addEventListener('load', () => {
+            // Initialize with default data
+            App.init({
+                installed_apps: [],
+                unread_messages: 0,
+                unread_mail: 0,
+                contacts: [],
+                conversations: [],
+                call_log: [],
+                mail: [],
+                receive_calls: true,
+                notify_messages: true
+            });
+            
+            // Listen for external events
+            Api.on('updateData', (data) => {
+                if (data) App.data = { ...App.data, ...data };
+                HomeScreen.refresh();
+            });
+            
+            Api.on('incomingCall', (data) => {
+                App.showScreen('call');
+                document.getElementById('callName').textContent = data.number || 'Unknown';
+                document.getElementById('callStatus').textContent = 'Incoming Call...';
+            });
+            
+            Api.on('notification', (data) => {
+                Notification.show(data.message, data.type || 'info');
+            });
+        });
+
+        // Handle back button (home indicator swipe simulation)
+        document.querySelectorAll('.home-bar').forEach(bar => {
+            bar.addEventListener('click', () => {
+                if (App.currentScreen === 'lock') {
+                    App.unlock();
+                } else if (App.currentScreen === 'app' || App.currentScreen === 'home') {
+                    App.showScreen('home');
+                }
+            });
+        });
+    </script>
+</body>
 </html>
