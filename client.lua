@@ -25,17 +25,23 @@ addEventHandler("Ophone.open", root, function(data)
     isOpen = true
     phoneData = data
 
-    browser = createBrowser(phoneW, phoneH, true, false)
+    browser = createBrowser(phoneW, phoneH, true, false, true)
     loadBrowserURL(browser, "http://mta/local/html/index.html")
+    
+    guiSetVisible(browser, true)
+    showCursor(true, true)
 
-    addEventHandler("onClientBrowserDocumentReady", browser, function()
+    local function onDocumentReady()
+        removeEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
         local jsonData = toJSON(data)
         executeBrowserJavascript(browser, "ophoneTrigger('Ophone.onOpen'," .. jsonData .. ")")
+        outputChatBox("#0a84ff[Debug] #ffffffBrowser document ready", 255, 255, 255, true)
         addEventHandler("onClientRender", root, updateBattery)
         addEventHandler("onClientRender", root, updateSignal)
-    end)
-
-    addEventHandler("onClientRender", root, renderPhone)
+    end
+    
+    addEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
+    
     triggerServerEvent("Ophone.setAnimationPhone", localPlayer, 1)
 end)
 
@@ -43,6 +49,8 @@ function renderPhone()
     if not isOpen or not browser then return end
     dxDrawImage(phoneX, phoneY, phoneW, phoneH, browser, 0, 0, 0, tocolor(255,255,255,255))
 end
+
+addEventHandler("onClientRender", root, renderPhone)
 
 addEvent("Ophone.close", true)
 addEventHandler("Ophone.close", root, function()
@@ -53,13 +61,15 @@ function closePhone()
     if not isOpen then return end
     if emChamada then return end
     isOpen = false
-    removeEventHandler("onClientRender", root, renderPhone)
-    removeEventHandler("onClientRender", root, updateBattery)
-    removeEventHandler("onClientRender", root, updateSignal)
     if browser then
+        guiSetVisible(browser, false)
+        showCursor(false)
         destroyElement(browser)
         browser = nil
     end
+    removeEventHandler("onClientRender", root, renderPhone)
+    removeEventHandler("onClientRender", root, updateBattery)
+    removeEventHandler("onClientRender", root, updateSignal)
     triggerServerEvent("Ophone.setAnimationPhone", localPlayer, 2)
     phoneData = nil
 end
