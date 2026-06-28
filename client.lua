@@ -28,7 +28,6 @@ addEventHandler("Ophone.open", root, function(data)
     browser = createBrowser(phoneW, phoneH, true, false, true)
     loadBrowserURL(browser, "http://mta/local/html/index.html")
     
-    guiSetVisible(browser, true)
     showCursor(true, true)
 
     local function onDocumentReady()
@@ -62,7 +61,6 @@ function closePhone()
     if emChamada then return end
     isOpen = false
     if browser then
-        guiSetVisible(browser, false)
         showCursor(false)
         destroyElement(browser)
         browser = nil
@@ -180,12 +178,14 @@ end
 
 function takeScreenshot()
     if not isOpen then return end
-    if browser then guiSetVisible(browser, false) end
+    if browser then 
+        -- Browser is rendered via dxDrawImage, no need to hide
+        outputChatBox("#0a84ff[Debug] #ffffffTaking screenshot...", 255, 255, 255, true)
+    end
     setTimer(function()
         local px, py, pz = getElementPosition(localPlayer)
         local rx, ry, rz = getElementRotation(localPlayer)
         takePlayerScreenShot(config.screenshot_width, config.screenshot_height, "screenshots/" .. getAccountName(getPlayerAccount(localPlayer)) .. "_" .. getTickCount() .. ".png", "JPEG", config.screenshot_quality)
-        if browser and isOpen then guiSetVisible(browser, true) end
     end, 200, 1)
 end
 
