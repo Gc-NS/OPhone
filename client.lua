@@ -222,6 +222,7 @@ addEventHandler("Ophone.updateData", root, function(data)
 end)
 
 bindKey(config.bind, "down", function()
+    outputChatBox("#0a84ff[Debug] #ffffffPhone is " .. (isOpen and "close" or "open"), 255, 255, 255, true)
     if isOpen then closePhone() else openPhone() end
 end)
 
@@ -231,6 +232,7 @@ end)
 
 addEventHandler("onPlayerJoin", root, function()
     bindKey(source, config.bind, "down", function()
+        outputChatBox("#0a84ff[Debug] #ffffffPhone is " .. (isOpen and "close" or "open"), 255, 255, 255, true)
         if isOpen then closePhone() else openPhone() end
     end)
 end)
@@ -238,6 +240,7 @@ end)
 addEventHandler("onResourceStart", resourceRoot, function()
     for _, player in ipairs(getElementsByType("player")) do
         bindKey(player, config.bind, "down", function()
+            outputChatBox("#0a84ff[Debug] #ffffffPhone is " .. (isOpen and "close" or "open"), 255, 255, 255, true)
             if isOpen then closePhone() else openPhone() end
         end)
     end
