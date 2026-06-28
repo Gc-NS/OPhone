@@ -996,6 +996,14 @@
             });
             
             // Listen for external events
+            Api.on('Ophone.onOpen', (data) => {
+                if (data) App.data = { ...App.data, ...data };
+                App.showScreen('lock');
+                StatusBar.init();
+                LockScreen.init();
+                HomeScreen.refresh();
+            });
+            
             Api.on('updateData', (data) => {
                 if (data) App.data = { ...App.data, ...data };
                 HomeScreen.refresh();
@@ -1009,6 +1017,35 @@
             
             Api.on('notification', (data) => {
                 Notification.show(data.message, data.type || 'info');
+            });
+            
+            Api.on('Ophone.batteryUpdate', (level) => {
+                App.updateBattery(level);
+            });
+            
+            Api.on('Ophone.signalUpdate', (level) => {
+                App.updateSignal(level);
+            });
+            
+            Api.on('Ophone.callEnded', () => {
+                if (App.currentScreen === 'call') {
+                    App.showScreen('home');
+                }
+            });
+            
+            Api.on('Ophone.callAccepted', () => {
+                document.getElementById('callStatus').textContent = 'Connected';
+                document.getElementById('callTimer').style.display = 'block';
+            });
+            
+            Api.on('Ophone.showOutgoingCall', (name) => {
+                App.showScreen('call');
+                document.getElementById('callName').textContent = name || 'Unknown';
+                document.getElementById('callStatus').textContent = 'Calling...';
+            });
+            
+            Api.on('Ophone.unlocked', () => {
+                LockScreen.onUnlocked();
             });
         });
 

@@ -23,5 +23,8 @@ const LockScreen = {
     },
     unlock() {
         Api.call('Ophone.unlock');
+    },
+    onUnlocked() {
+        App.showScreen('home');
     }
 };
