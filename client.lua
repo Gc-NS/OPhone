@@ -16,6 +16,7 @@ function openPhone()
         outputChatBox("#ff453a[Ophone] #ffffffCannot use phone while being carried", 255, 255, 255, true)
         return
     end
+    outputChatBox("#0a84ff[Debug] #ffffffLoading phone UI...", 255, 255, 255, true)
     triggerServerEvent("Ophone.requestData", localPlayer)
 end
 
@@ -25,16 +26,26 @@ addEventHandler("Ophone.open", root, function(data)
     isOpen = true
     phoneData = data
 
+    outputChatBox("#0a84ff[Debug] #ffffffCreating browser...", 255, 255, 255, true)
     browser = createBrowser(phoneW, phoneH, true, false, true)
+    
+    -- Add debug for browser creation
+    if not browser then
+        outputChatBox("#ff453a[Error] #ffffffFailed to create browser!", 255, 255, 255, true)
+        isOpen = false
+        return
+    end
+    
+    outputChatBox("#0a84ff[Debug] #ffffffLoading HTML UI...", 255, 255, 255, true)
     loadBrowserURL(browser, "http://mta/local/html/index.html")
     
     showCursor(true, true)
 
     local function onDocumentReady()
         removeEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
+        outputChatBox("#0a84ff[Debug] #ffffffPhone UI downloaded and ready!", 255, 255, 255, true)
         local jsonData = toJSON(data)
         executeBrowserJavascript(browser, "ophoneTrigger('Ophone.onOpen'," .. jsonData .. ")")
-        outputChatBox("#0a84ff[Debug] #ffffffBrowser document ready", 255, 255, 255, true)
         addEventHandler("onClientRender", root, updateBattery)
         addEventHandler("onClientRender", root, updateSignal)
     end

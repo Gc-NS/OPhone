@@ -500,15 +500,20 @@
                 for (let i = 1; i < arguments.length; i++) args.push(arguments[i]);
                 try {
                     if (typeof mta !== 'undefined' && mta.triggerEvent) {
+                        console.log('[API] Triggering:', fnName, args);
                         mta.triggerEvent('Ophone.jsCall', fnName, JSON.stringify(args));
+                    } else {
+                        console.warn('[API] mta not available');
                     }
                 } catch(e) { console.error('Api.call error:', fnName, e); }
             },
             on(eventName, handler) {
                 if (!this._callbacks[eventName]) this._callbacks[eventName] = [];
                 this._callbacks[eventName].push(handler);
+                console.log('[API] Registered listener for:', eventName);
             },
             trigger(eventName, data) {
+                console.log('[API] Triggering event:', eventName, data);
                 const handlers = this._callbacks[eventName];
                 if (handlers) {
                     const parsed = typeof data === 'string' ? (() => { try { return JSON.parse(data); } catch(e) { return data; } })() : data;
@@ -982,6 +987,7 @@
 
         // ===== INITIALIZATION =====
         window.addEventListener('load', () => {
+            console.log('[HTML] Page loaded, initializing...');
             // Initialize with default data
             App.init({
                 installed_apps: [],
@@ -997,6 +1003,7 @@
             
             // Listen for external events
             Api.on('Ophone.onOpen', (data) => {
+                console.log('[HTML] Phone opened with data:', data);
                 if (data) App.data = { ...App.data, ...data };
                 App.showScreen('lock');
                 StatusBar.init();
@@ -1048,6 +1055,12 @@
                 LockScreen.onUnlocked();
             });
         });
+
+        // Expose oponeTrigger globally for Lua to call
+        window.oponeTrigger = function(eventName, data) {
+            console.log('[HTML] External event received:', eventName, data);
+            Api.trigger(eventName, data);
+        };
 
         // Handle back button (home indicator swipe simulation)
         document.querySelectorAll('.home-bar').forEach(bar => {
