@@ -1,1 +1,5 @@
-(empty)
+```lua
+-- No build artifacts, dependencies, or temp files detected in changes
+-- Only source/config files present (.lua, .html, .js)
+-- No .gitignore rules needed
+```

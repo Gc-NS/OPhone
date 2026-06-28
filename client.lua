@@ -112,6 +112,9 @@ end)
 
 function handleJsCall(name, args)
     if name == "Ophone.onClose" then closePhone()
+    elseif name == "Ophone.unlock" then
+        -- Unlock phone - just navigate to home screen, don't close the phone
+        if browser then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.unlocked')") end
     elseif name == "Ophone.dialNumber" then
         local number = args[1]
         if not number or number == "" then return end
