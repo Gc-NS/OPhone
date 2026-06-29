@@ -1,1 +1,1 @@
-Nothing should be ignored based on the provided file changes. The modified files ('client.lua', 'html/index.html') are source code/config files and do not represent build artifacts, dependencies, or temporary files that should be ignored.
+Nothing needs to be added to .gitignore since only a source code file (`client.lua`) was modified and there are no build artifacts, dependencies, or temporary files in the changes.
