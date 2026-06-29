@@ -1,51 +1,72 @@
 local screenX, screenY = guiGetScreenSize()
-local phoneW, phoneH = 280, 604
-local phoneX = screenX - phoneW - 20
-local phoneY = (screenY - phoneH) / 2
+-- Scale phone to fit screen better - use 20% of screen height as base
+local phoneH = math.floor(screenY * 0.20)
+local phoneW = math.floor(phoneH * (280 / 604)) -- Maintain aspect ratio
+local phoneX = math.floor((screenX - phoneW) / 2) -- Center horizontally
+local phoneY = math.floor((screenY - phoneH) / 2) -- Center vertically
 
 local browser = nil
 local isOpen = false
+local isLoading = false
 local phoneData = nil
 local battery = 100
 local signal = 100
 local emChamada = nil
 
 function openPhone()
-    if isOpen then return end
+    if isOpen or isLoading then 
+        outputChatBox("#0a84ff[Debug] #ffffffPhone already open or loading...", 255, 255, 255, true)
+        return 
+    end
     if getElementData(localPlayer, "isPlayerCarry") then
         outputChatBox("#ff453a[Ophone] #ffffffCannot use phone while being carried", 255, 255, 255, true)
         return
     end
+    isLoading = true
     outputChatBox("#0a84ff[Debug] #ffffffLoading phone UI...", 255, 255, 255, true)
     triggerServerEvent("Ophone.requestData", localPlayer)
 end
 
 addEvent("Ophone.open", true)
 addEventHandler("Ophone.open", root, function(data)
-    if isOpen then return end
+    if isOpen then 
+        isLoading = false
+        return 
+    end
     isOpen = true
+    isLoading = false
     phoneData = data
 
-    outputChatBox("#0a84ff[Debug] #ffffffCreating browser...", 255, 255, 255, true)
+    outputChatBox("#0a84ff[Debug] #ffffffCreating browser (" .. phoneW .. "x" .. phoneH .. ")...", 255, 255, 255, true)
     browser = createBrowser(phoneW, phoneH, true, false, true)
     
     -- Add debug for browser creation
     if not browser then
         outputChatBox("#ff453a[Error] #ffffffFailed to create browser!", 255, 255, 255, true)
         isOpen = false
+        isLoading = false
         return
     end
     
     outputChatBox("#0a84ff[Debug] #ffffffLoading HTML UI...", 255, 255, 255, true)
-    loadBrowserURL(browser, "http://mta/local/html/index.html")
+    local loaded = loadBrowserURL(browser, "http://mta/local/html/index.html")
+    if not loaded then
+        outputChatBox("#ff453a[Error] #ffffffFailed to load browser URL!", 255, 255, 255, true)
+        isOpen = false
+        isLoading = false
+        destroyElement(browser)
+        browser = nil
+        return
+    end
     
     showCursor(true, true)
 
     local function onDocumentReady()
         removeEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
         outputChatBox("#0a84ff[Debug] #ffffffPhone UI downloaded and ready!", 255, 255, 255, true)
+        outputChatBox("#0a84ff[Debug] #ffffffBrowser loading state: " .. tostring(browserIsLoading(browser)), 255, 255, 255, true)
         local jsonData = toJSON(data)
-        executeBrowserJavascript(browser, "ophoneTrigger('Ophone.onOpen'," .. jsonData .. ")")
+        executeBrowserJavascript(browser, "window.oponeTrigger('Ophone.onOpen'," .. jsonData .. ")")
         addEventHandler("onClientRender", root, updateBattery)
         addEventHandler("onClientRender", root, updateSignal)
     end

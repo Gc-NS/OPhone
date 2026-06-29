@@ -8,7 +8,8 @@
     <script src="towers.lua" type="server" />
 
     <html src="html/index.html" />
-
+    <file src="html/index.html" />
+    
     <!-- SFX - copied from n3xt_celular -->
     <file src="files/sfx/chamando.mp3" />
     <file src="files/sfx/chamada_01.mp3" />
