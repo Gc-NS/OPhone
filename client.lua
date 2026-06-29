@@ -38,7 +38,7 @@ addEventHandler("Ophone.open", root, function(data)
     phoneData = data
 
     outputChatBox("#0a84ff[Debug] #ffffffCreating browser (" .. phoneW .. "x" .. phoneH .. ")...", 255, 255, 255, true)
-    browser = createBrowser(phoneW, phoneH, true, false, true)
+    browser = createBrowser(phoneW, phoneH, false, false, false)
     
     -- Add debug for browser creation
     if not browser then
@@ -49,7 +49,7 @@ addEventHandler("Ophone.open", root, function(data)
     end
     
     outputChatBox("#0a84ff[Debug] #ffffffLoading HTML UI...", 255, 255, 255, true)
-    local loaded = loadBrowserURL(browser, "http://mta/local/html/index.html")
+    local loaded = loadBrowserURL(browser, "file://html/index.html")
     if not loaded then
         outputChatBox("#ff453a[Error] #ffffffFailed to load browser URL!", 255, 255, 255, true)
         isOpen = false
@@ -81,7 +81,7 @@ end)
 
 function renderPhone()
     if not isOpen or not browser then return end
-    dxDrawImage(phoneX, phoneY, phoneW, phoneH, browser, 0, 0, 0, tocolor(255,255,255,255))
+    dxDrawImage(phoneX, phoneY, phoneW, phoneH, browser, 0, 0, 0, tocolor(255,255,255,255), true)
 end
 
 addEvent("Ophone.close", true)
