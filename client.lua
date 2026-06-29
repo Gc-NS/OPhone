@@ -49,7 +49,7 @@ addEventHandler("Ophone.open", root, function(data)
     end
     
     outputChatBox("#0a84ff[Debug] #ffffffLoading HTML UI...", 255, 255, 255, true)
-    local loaded = browser:loadURL("file://html/index.html")
+    local loaded = loadBrowserURL(browser, "file://html/index.html")
     if not loaded then
         outputChatBox("#ff453a[Error] #ffffffFailed to load browser URL!", 255, 255, 255, true)
         isOpen = false
@@ -64,9 +64,9 @@ addEventHandler("Ophone.open", root, function(data)
     local function onDocumentReady()
         removeEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
         outputChatBox("#0a84ff[Debug] #ffffffPhone UI downloaded and ready!", 255, 255, 255, true)
-        outputChatBox("#0a84ff[Debug] #ffffffBrowser loading state: " .. tostring(browser:isLoading()), 255, 255, 255, true)
+        outputChatBox("#0a84ff[Debug] #ffffffBrowser loading state: " .. tostring(browserIsLoading(browser)), 255, 255, 255, true)
         local jsonData = toJSON(data)
-        browser:executeJavascript("window.oponeTrigger('Ophone.onOpen'," .. jsonData .. ")")
+        executeBrowserJavascript(browser, "window.oponeTrigger('Ophone.onOpen'," .. jsonData .. ")")
         addEventHandler("onClientRender", root, updateBattery)
         addEventHandler("onClientRender", root, updateSignal)
     end
@@ -122,7 +122,7 @@ function updateBattery()
     if charging then battery = math.min(100, battery + config.charger_recharge_rate * dt)
     else battery = math.max(0, battery - drainRate * dt) end
     if battery <= 0 and isOpen then closePhone(); outputChatBox("#ff453a[Ophone] #ffffffBattery dead!", 255, 255, 255, true); return end
-    if browser and isOpen then browser:executeJavascript("ophoneTrigger('Ophone.batteryUpdate'," .. math.floor(battery) .. ")") end
+    if browser and isOpen then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.batteryUpdate'," .. math.floor(battery) .. ")") end
 end
 
 local lastSignalCheck = getTickCount()
@@ -141,7 +141,7 @@ function updateSignal()
         end
     end
     signal = bestSignal
-    if browser and isOpen then browser:executeJavascript("ophoneTrigger('Ophone.signalUpdate'," .. math.floor(signal) .. ")") end
+    if browser and isOpen then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.signalUpdate'," .. math.floor(signal) .. ")") end
 end
 
 addEvent("Ophone.jsCall", true)
@@ -155,7 +155,7 @@ function handleJsCall(name, args)
     if name == "Ophone.onClose" then closePhone()
     elseif name == "Ophone.unlock" then
         -- Unlock phone - just navigate to home screen, don't close the phone
-        if browser then browser:executeJavascript("ophoneTrigger('Ophone.unlocked')") end
+        if browser then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.unlocked')") end
     elseif name == "Ophone.dialNumber" then
         local number = args[1]
         if not number or number == "" then return end
@@ -166,7 +166,7 @@ function handleJsCall(name, args)
     elseif name == "Ophone.endCall" then
         triggerServerEvent("Ophone.endCall", localPlayer)
         emChamada = nil
-        if browser then browser:executeJavascript("ophoneTrigger('Ophone.callEnded')") end
+        if browser then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.callEnded')") end
     elseif name == "Ophone.addContact" then triggerServerEvent("Ophone.addContact", localPlayer, args[1], args[2])
     elseif name == "Ophone.deleteContact" then triggerServerEvent("Ophone.deleteContact", localPlayer, args[1])
     elseif name == "Ophone.sendMessage" then
@@ -206,7 +206,7 @@ function handleJsCall(name, args)
 end
 
 function notifyJS(msg, type)
-    if browser then browser:executeJavascript("ophoneTrigger('Ophone.notify','" .. msg .. "')") end
+    if browser then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.notify','" .. msg .. "')") end
 end
 
 function takeScreenshot()
@@ -224,7 +224,7 @@ end
 
 addEvent("Ophone.screenshotTaken", true)
 addEventHandler("Ophone.screenshotTaken", root, function(path)
-    if browser and isOpen then browser:executeJavascript("ophoneTrigger('Ophone.screenshotSaved','" .. path .. "')") end
+    if browser and isOpen then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.screenshotSaved','" .. path .. "')") end
 end)
 
 addEvent("Ophone.incomingCall", true)
@@ -233,24 +233,24 @@ addEventHandler("Ophone.incomingCall", root, function(callerData)
     if not isOpen then triggerServerEvent("Ophone.requestData", localPlayer) end
     if browser then
         local name = callerData.display_name or callerData.username or callerData.phone_number or "Unknown"
-        browser:executeJavascript("ophoneTrigger('Ophone.incomingCall','" .. name .. "')")
+        executeBrowserJavascript(browser, "ophoneTrigger('Ophone.incomingCall','" .. name .. "')")
     end
 end)
 
 addEvent("Ophone.callAccepted", true)
 addEventHandler("Ophone.callAccepted", root, function()
-    if browser then browser:executeJavascript("ophoneTrigger('Ophone.callAccepted')") end
+    if browser then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.callAccepted')") end
 end)
 
 addEvent("Ophone.callEnded", true)
 addEventHandler("Ophone.callEnded", root, function()
     emChamada = nil
-    if browser then browser:executeJavascript("ophoneTrigger('Ophone.callEnded')") end
+    if browser then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.callEnded')") end
 end)
 
 addEvent("Ophone.showOutgoingCall", true)
 addEventHandler("Ophone.showOutgoingCall", root, function(name)
-    if browser then browser:executeJavascript("ophoneTrigger('Ophone.showOutgoingCall','" .. (name or "Unknown") .. "')") end
+    if browser then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.showOutgoingCall','" .. (name or "Unknown") .. "')") end
 end)
 
 addEvent("Ophone.notify", true)
@@ -261,7 +261,7 @@ end)
 addEvent("Ophone.updateData", true)
 addEventHandler("Ophone.updateData", root, function(data)
     phoneData = data
-    if browser and isOpen then browser:executeJavascript("ophoneTrigger('Ophone.updateData'," .. toJSON(data) .. ")") end
+    if browser and isOpen then executeBrowserJavascript(browser, "ophoneTrigger('Ophone.updateData'," .. toJSON(data) .. ")") end
 end)
 
 bindKey(config.bind, "down", function()
