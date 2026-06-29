@@ -38,12 +38,14 @@ addEventHandler("Ophone.open", root, function(data)
     phoneData = data
 
     outputChatBox("#0a84ff[Debug] #ffffffCreating browser (" .. phoneW .. "x" .. phoneH .. ")...", 255, 255, 255, true)
-    -- Create browser with transparency enabled (last parameter true for transparent background)
-    browser = createBrowser(phoneW, phoneH, true, false, true)
+    
+    -- Create browser with transparency enabled
+    -- Parameters: width, height, isLocal, transparentBackground, allowDragging
+    browser = createBrowser(phoneW, phoneH, true, true, false)
     
     -- Add debug for browser creation
     if not browser then
-        outputChatBox("#ff453a[Error] #ffffffFailed to create browser!", 255, 255, 255, true)
+        outputChatBox("#ff453a[Error] #ffffffFailed to create browser! Check MTA logs.", 255, 255, 255, true)
         isOpen = false
         isLoading = false
         return
@@ -53,6 +55,7 @@ addEventHandler("Ophone.open", root, function(data)
     
     -- Set up event handlers BEFORE loading the URL
     local function onDocumentReady()
+        outputChatBox("#0a84ff[Debug] #ffffffDocument ready event fired!", 255, 255, 255, true)
         removeEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
         outputChatBox("#0a84ff[Debug] #ffffffPhone UI downloaded and ready!", 255, 255, 255, true)
         outputChatBox("#0a84ff[Debug] #ffffffBrowser loading state: " .. tostring(browserIsLoading(browser)), 255, 255, 255, true)
@@ -63,7 +66,7 @@ addEventHandler("Ophone.open", root, function(data)
     end
     
     local function onLoadFailed(url, err)
-        outputChatBox("#ff453a[Error] #ffffffBrowser load failed! URL: " .. tostring(url) .. " Error: " .. tostring(err), 255, 255, 255, true)
+        outputChatBox("#ff453a[Error] #ffffffBrowser load failed! URL: " .. tostring(url) .. " Error Code: " .. tostring(err), 255, 255, 255, true)
         isOpen = false
         isLoading = false
         if browser then
@@ -75,10 +78,11 @@ addEventHandler("Ophone.open", root, function(data)
     addEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
     addEventHandler("onClientBrowserLoadFailed", browser, onLoadFailed)
     
-    -- Load the HTML file using relative path
+    -- Load the HTML file using relative path (must be listed in meta.xml)
+    outputChatBox("#0a84ff[Debug] #ffffffLoading URL: html/index.html", 255, 255, 255, true)
     local loaded = loadBrowserURL(browser, "html/index.html")
     if not loaded then
-        outputChatBox("#ff453a[Error] #ffffffFailed to initiate browser URL load!", 255, 255, 255, true)
+        outputChatBox("#ff453a[Error] #ffffffFailed to initiate browser URL load! Check meta.xml", 255, 255, 255, true)
         isOpen = false
         isLoading = false
         destroyElement(browser)
