@@ -39,9 +39,10 @@ addEventHandler("Ophone.open", root, function(data)
 
     outputChatBox("#0a84ff[Debug] #ffffffCreating browser (" .. phoneW .. "x" .. phoneH .. ")...", 255, 255, 255, true)
     
-    -- Create browser with transparency enabled
+    -- Create browser with transparency DISABLED to prevent crashes
     -- Parameters: width, height, isLocal, transparentBackground, allowDragging
-    browser = createBrowser(phoneW, phoneH, true, true, false)
+    -- Setting transparentBackground to FALSE to avoid CEF crashes
+    browser = createBrowser(phoneW, phoneH, true, false, false)
     
     -- Add debug for browser creation
     if not browser then
