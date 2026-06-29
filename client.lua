@@ -38,6 +38,7 @@ addEventHandler("Ophone.open", root, function(data)
     phoneData = data
 
     outputChatBox("#0a84ff[Debug] #ffffffCreating browser (" .. phoneW .. "x" .. phoneH .. ")...", 255, 255, 255, true)
+    -- Create browser with transparency enabled (last parameter true for transparent background)
     browser = createBrowser(phoneW, phoneH, true, false, true)
     
     -- Add debug for browser creation
@@ -48,19 +49,9 @@ addEventHandler("Ophone.open", root, function(data)
         return
     end
     
-    outputChatBox("#0a84ff[Debug] #ffffffLoading HTML UI...", 255, 255, 255, true)
-    local loaded = loadBrowserURL(browser, "http://mta/local/html/index.html")
-    if not loaded then
-        outputChatBox("#ff453a[Error] #ffffffFailed to load browser URL!", 255, 255, 255, true)
-        isOpen = false
-        isLoading = false
-        destroyElement(browser)
-        browser = nil
-        return
-    end
+    outputChatBox("#0a84ff[Debug] #ffffffBrowser created successfully, loading HTML UI...", 255, 255, 255, true)
     
-    showCursor(true, true)
-
+    -- Set up event handlers BEFORE loading the URL
     local function onDocumentReady()
         removeEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
         outputChatBox("#0a84ff[Debug] #ffffffPhone UI downloaded and ready!", 255, 255, 255, true)
@@ -71,7 +62,31 @@ addEventHandler("Ophone.open", root, function(data)
         addEventHandler("onClientRender", root, updateSignal)
     end
     
+    local function onLoadFailed(url, err)
+        outputChatBox("#ff453a[Error] #ffffffBrowser load failed! URL: " .. tostring(url) .. " Error: " .. tostring(err), 255, 255, 255, true)
+        isOpen = false
+        isLoading = false
+        if browser then
+            destroyElement(browser)
+            browser = nil
+        end
+    end
+    
     addEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
+    addEventHandler("onClientBrowserLoadFailed", browser, onLoadFailed)
+    
+    -- Load the HTML file using relative path
+    local loaded = loadBrowserURL(browser, "html/index.html")
+    if not loaded then
+        outputChatBox("#ff453a[Error] #ffffffFailed to initiate browser URL load!", 255, 255, 255, true)
+        isOpen = false
+        isLoading = false
+        destroyElement(browser)
+        browser = nil
+        return
+    end
+    
+    showCursor(true, true)
     
     triggerServerEvent("Ophone.setAnimationPhone", localPlayer, 1)
 end)
