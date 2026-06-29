@@ -9,6 +9,28 @@
 
     <html src="html/index.html" />
     <file src="html/index.html" />
+    <file src="html/css/phone.css" />
+    <file src="html/js/api.js" />
+    <file src="html/js/app.js" />
+    <file src="html/js/utils.js" />
+    <file src="html/js/apps/appstore.js" />
+    <file src="html/js/apps/camera.js" />
+    <file src="html/js/apps/contacts.js" />
+    <file src="html/js/apps/gallery.js" />
+    <file src="html/js/apps/homescreen.js" />
+    <file src="html/js/apps/instagram.js" />
+    <file src="html/js/apps/lockscreen.js" />
+    <file src="html/js/apps/mail.js" />
+    <file src="html/js/apps/messages.js" />
+    <file src="html/js/apps/onion.js" />
+    <file src="html/js/apps/phone.js" />
+    <file src="html/js/apps/settings.js" />
+    <file src="html/js/apps/shorts.js" />
+    <file src="html/js/apps/sim.js" />
+    <file src="html/js/components/modal.js" />
+    <file src="html/js/components/navbar.js" />
+    <file src="html/js/components/notification.js" />
+    <file src="html/js/components/statusbar.js" />
     
     <!-- SFX - copied from n3xt_celular -->
     <file src="files/sfx/chamando.mp3" />

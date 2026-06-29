@@ -73,6 +73,9 @@ addEventHandler("Ophone.open", root, function(data)
     
     addEventHandler("onClientBrowserDocumentReady", browser, onDocumentReady)
     
+    -- Add render handler only after browser is created and ready
+    addEventHandler("onClientRender", root, renderPhone)
+    
     triggerServerEvent("Ophone.setAnimationPhone", localPlayer, 1)
 end)
 
@@ -80,8 +83,6 @@ function renderPhone()
     if not isOpen or not browser then return end
     dxDrawImage(phoneX, phoneY, phoneW, phoneH, browser, 0, 0, 0, tocolor(255,255,255,255))
 end
-
-addEventHandler("onClientRender", root, renderPhone)
 
 addEvent("Ophone.close", true)
 addEventHandler("Ophone.close", root, function()
